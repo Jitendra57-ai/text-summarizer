@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <<link rel="stylesheet" href="/static/style.css">
+
+    <title>Text Summarizer</title>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Text Summarizer</h1>
+
+        <h3>Using Hugging Face Transformers</h3>
+
+        <p>Write or paste your content below for quick summarization.</p>
+
+        <form>
+
+            <textarea
+                id="dialogue"
+                rows="12"
+                cols="80"
+                placeholder="Enter your dialogue here..."
+            ></textarea>
+
+            <br><br>
+
+            <button
+                id="summarizeButton"
+                type="submit"
+            >
+                Summarize
+            </button>
+
+        </form>
+
+        <div class="summary-output">
+
+            <h3>Generated Summary</h3>
+
+            <p id="summary">
+                Your summary will appear here.
+            </p>
+
+        </div>
+
+    </div>
+<script>
+ 
+    document.querySelector("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Get references to elements
+        const dialogueInput = document.getElementById("dialogue");
+        const summaryText = document.getElementById("summary");
+        const submitButton = e.target.querySelector("button");
+
+        // Get dialogue text
+        const dialogue = dialogueInput.value.trim();
+
+        
+        if (!dialogue) {
+            return;
+        }
+
+        // Show processing message and disable button
+        summaryText.innerText = "Processing...";
+        submitButton.disabled = true;
+
+        try {
+            // Send dialogue to the FastAPI backend
+            const response = await fetch("/summarize/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    dialogue: dialogue
+                })
+            });
+
+            // Check if server returned an error
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            // Read JSON response
+            const data = await response.json();
+
+            // Display generated summary
+            summaryText.innerText = data.summary || "No summary returned.";
+
+        } catch (err) {
+            
+            summaryText.innerText = `Error: ${err.message}`;
+
+        } finally {
+            // Enable button again
+            submitButton.disabled = false;
+        }
+    });
+</script>    
+
+</body>
+
+</html>
